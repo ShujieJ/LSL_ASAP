@@ -1,6 +1,10 @@
 # LSL_ASAP
 ASAP 课题组用数据处理代码
 
+# TODO:
+更新注释
+更新说明文档：static_processer添加了新的自定义参数
+
 # 使用说明
 static_processer.m 为静态测力处理程序  
 dynamic_processer.m 为动态测力处理程序  
