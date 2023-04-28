@@ -1,20 +1,11 @@
-%%%%%%使用前必读%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %本程序为北京航空航天大学陆士嘉实验室重力式水槽测力实验用程序
-%输入为实验中产生的原始数据
-%输出为不同频率下的无量纲时间、攻角、升力系数、阻力系数、滚转力矩系数、俯仰力矩系数、法向力系数、轴向力系数。
-
-%%%%%程序使用说明%%%%%
-
-
-%%%%%程序更新记录%%%%%
-%2021.12.31 程序完成
-%2022.03.19 程序大幅更改调整采集时间差的方式
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear all;
 format long;
 
-%%%%%自定义参数%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%自定义参数%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 folder_address = 'G:\lab\GD\4_Experiment_Data\jsj\a60_metal\0.15'; %文件夹地址
 rho = 998.2; %密度 kg/m3
 flow_velocity = 0.15; %速度 m/s
@@ -31,8 +22,8 @@ dyn_sampling_rate = 2000; %数据采样率
 
 
 
-%%%%%以下为程序本体，严禁更改！%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%如有bug，在github上找到LSL_ASAP项目发issue或者联系贾树杰%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%以下为程序本体，严禁更改！%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%如有bug，在github上找到LSL_ASAP项目发issue或者联系贾树杰%%%%%%%%%%%%%%
 
 
 
@@ -259,8 +250,8 @@ for i = 1 : length(dyn_txt_file_information) %遍历所有动态文件
     X_balance_force = dyn_force_result_over_dimensionless_time(:, 4);
     Mx_balance_moment = dyn_force_result_over_dimensionless_time(:, 5);
     aoa_calculated_by_dimensionless_time = 30 - 30 * cos(2 * pi * dyn_force_result_over_dimensionless_time(:, 1));
-    L = - Y_balance_force .* cos(aoa_calculated_by_dimensionless_time * pi / 180) - X_balance_force .* sin(aoa_calculated_by_dimensionless_time * pi / 180);%升力（气流坐标系）
-    D = - Y_balance_force .* sin(aoa_calculated_by_dimensionless_time * pi / 180) + X_balance_force .* cos(aoa_calculated_by_dimensionless_time * pi / 180);%阻力（气流坐标系）
+    L = Y_balance_force .* cos(aoa_calculated_by_dimensionless_time * pi / 180) + X_balance_force .* sin(aoa_calculated_by_dimensionless_time * pi / 180);%升力（气流坐标系）
+    D = Y_balance_force .* sin(aoa_calculated_by_dimensionless_time * pi / 180) - X_balance_force .* cos(aoa_calculated_by_dimensionless_time * pi / 180);%阻力（气流坐标系）
     CL = L / dyn_pressure_infinity;%升力系数（气流坐标系）
     CD = D / dyn_pressure_infinity;%阻力系数（气流坐标系）
     CMz = Mz_balance_moment / dyn_pressure_infinity / ref_length;%俯仰力矩系数（取矩点为天平测力取矩点）
