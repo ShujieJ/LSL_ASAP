@@ -6,7 +6,7 @@ clear all;
 format long;
 
 %%%%%自定义参数%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-folder_address = 'G:\lab\GD\4_Experiment_Data\jsj\a60_metal\0.15'; %文件夹地址
+folder_address = 'C:\test'; %文件夹地址
 rho = 998.2; %密度 kg/m3
 flow_velocity = 0.15; %速度 m/s
 ref_length = 1; %参考长度 m
@@ -50,6 +50,7 @@ dyn_pressure_infinity = 0.5 * rho * flow_velocity ^ 2 * ref_surface_area;
 
 %获取静态电压随迎角变化的数据 保存在static_measurement_voltage_data_over_aoa中
 sta_txt_file_information = dir([sta_folder_address, '\*.txt']); %静态文件信息
+dynamic_length_of_sta_voltage_data_over_dimensionless_time = 2 * length(sta_txt_file_information);%根据静态数据文件个数生成静态无量纲时间电压序列长度
 for i = 1 : length(sta_txt_file_information) %遍历所有静态文件
     sta_txt_file_address = ([sta_folder_address, '\', sta_txt_file_information(i).name]); %获取静态文件完整地址
     sta_voltage_data = importdata(sta_txt_file_address); %读取静态文件数据
@@ -59,7 +60,7 @@ for i = 1 : length(sta_txt_file_information) %遍历所有静态文件
     sta_voltage_data_over_aoa(i, :) = [sta_aoa, sta_voltage_mean_data(1, 2 : 8)]; %将信息写入静态迎角电压序列
     sta_dimensionless_time = acos(1 - sta_aoa / 30) / (2 * pi); %计算迎角对应的无量纲时间
     sta_voltage_data_over_dimensionless_time(i, :) = [sta_dimensionless_time, sta_voltage_mean_data(1, 2 : 8)]; %将信息写入静态无量纲时间电压序列
-    sta_voltage_data_over_dimensionless_time(26 - i, :) = [1 - sta_dimensionless_time, sta_voltage_mean_data(1, 2 : 8)]; %将信息写入静态无量纲时间电压序列
+    sta_voltage_data_over_dimensionless_time(dynamic_length_of_sta_voltage_data_over_dimensionless_time - i, :) = [1 - sta_dimensionless_time, sta_voltage_mean_data(1, 2 : 8)]; %将信息写入静态无量纲时间电压序列
 end
 sta_voltage_data_over_aoa = sortrows(sta_voltage_data_over_aoa, 1); %将静态迎角电压序列按照迎角排序
 sta_voltage_data_over_dimensionless_time = sortrows(sta_voltage_data_over_dimensionless_time, 1); %将静态无量纲时间电压序列按照迎角排序
@@ -191,7 +192,7 @@ for i = 1 : length(dyn_txt_file_information) %遍历所有动态文件
     [dyn_fil_avr_Mz_balance] = fil_avr(dyn_Mz_balance_voltage, dyn_sample_point_per_cycle, dyn_sample_cycle_number);
     [dyn_fil_avr_X_balance] = fil_avr(dyn_X_balance_voltage, dyn_sample_point_per_cycle, dyn_sample_cycle_number);
     [dyn_fil_avr_Mx_balance] = fil_avr(dyn_Mx_balance_voltage, dyn_sample_point_per_cycle, dyn_sample_cycle_number);
-    %plot(time(1: length(dyn_fil_avr_X_balance)), dyn_X_balance_voltage(1: length(dyn_fil_avr_X_balance)), 'r', time(1: length(dyn_fil_avr_X_balance)), dyn_fil_avr_X_balance,'g');
+    plot(time(1: length(dyn_fil_avr_Y_balance)), dyn_Y_balance_voltage(1: length(dyn_fil_avr_Y_balance)), 'r', time(1: length(dyn_fil_avr_Y_balance)), dyn_fil_avr_Y_balance,'g');
     
     %计算动态迎角
     aoa_voltage_constant_a = 72.3643;
@@ -250,15 +251,15 @@ for i = 1 : length(dyn_txt_file_information) %遍历所有动态文件
     X_balance_force = dyn_force_result_over_dimensionless_time(:, 4);
     Mx_balance_moment = dyn_force_result_over_dimensionless_time(:, 5);
     aoa_calculated_by_dimensionless_time = 30 - 30 * cos(2 * pi * dyn_force_result_over_dimensionless_time(:, 1));
-    L = Y_balance_force .* cos(aoa_calculated_by_dimensionless_time * pi / 180) + X_balance_force .* sin(aoa_calculated_by_dimensionless_time * pi / 180);%升力（气流坐标系）
-    D = Y_balance_force .* sin(aoa_calculated_by_dimensionless_time * pi / 180) - X_balance_force .* cos(aoa_calculated_by_dimensionless_time * pi / 180);%阻力（气流坐标系）
+    L = - Y_balance_force .* cos(aoa_calculated_by_dimensionless_time * pi / 180) - X_balance_force .* sin(aoa_calculated_by_dimensionless_time * pi / 180);%升力（气流坐标系）
+    D = - Y_balance_force .* sin(aoa_calculated_by_dimensionless_time * pi / 180) + X_balance_force .* cos(aoa_calculated_by_dimensionless_time * pi / 180);%阻力（气流坐标系）
     CL = L / dyn_pressure_infinity;%升力系数（气流坐标系）
     CD = D / dyn_pressure_infinity;%阻力系数（气流坐标系）
     CMz = Mz_balance_moment / dyn_pressure_infinity / ref_length;%俯仰力矩系数（取矩点为天平测力取矩点）
     CMx = Mx_balance_moment / dyn_pressure_infinity / ref_length;%滚转力矩系数（取矩点为天平测力取矩点）
     CY = - Y_balance_force / dyn_pressure_infinity;%法向力系数（模型对称面坐标系）
     CX = X_balance_force / dyn_pressure_infinity;%轴向力系数（模型对称面坐标系）
-    force_coefficient_final_result_over_dimensionless_time = [dimensionless_time_sequence CL CD CY CX];
+    force_coefficient_final_result_over_dimensionless_time = [dimensionless_time_sequence CL CD CMz CMx CY CX];
     
     %保存结果
     [row_number, ~] = size(force_coefficient_final_result_over_dimensionless_time);%取得最终结果的行数并储存
@@ -273,7 +274,7 @@ for i = 1 : length(dyn_txt_file_information) %遍历所有动态文件
 %     end
 %     fclose(fid);
     
-    head = {'time', 'CL', 'CD', 'CY', 'CX'};
+    head = {'time', 'CL', 'CD', 'CMz', 'CMx', 'CY', 'CX'};
     xlswrite([result_save_address, '\', 'result.xls'], head, result_file_name, 'A1');
     xlswrite([result_save_address, '\', 'result.xls'], force_coefficient_final_result_over_dimensionless_time, result_file_name, 'A2');
 end
